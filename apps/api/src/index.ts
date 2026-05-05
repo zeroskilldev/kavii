@@ -1,5 +1,6 @@
 import express from "express";
 import { client } from "@repo/store/client"
+import { auth } from "google-auth-library";
 
 const app = express();
 
@@ -9,22 +10,7 @@ app.get("/", (req, res) => {
 	res.send("Hi there");
 })
 
-app.post("/signup", async (req, res) => {
-	const { username, password } = req.body;
-
-	const user = await client.user.create({
-		data: {
-			username,
-			password
-		}
-	})
-
-	res.json({
-		msg: "successfully signed up",
-		id: user.id
-	})
-})
-
+// app.use("/api/auth",)
 
 app.listen(3001, () => {
 	console.log("running on the port 3001");

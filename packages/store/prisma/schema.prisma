@@ -13,7 +13,35 @@ datasource db {
 
 
 model user {
-  id        String      @id     @default(uuid())
-  username  String      @unique
-  password  String
+  id                                String      @id         @default(uuid())
+  email                             String      @unique
+  name                              String?
+  password                          String?
+  provider                          String
+  isVerified                        Boolean                 @default(false)
+  sessions                          session[]
+}
+
+model session{
+  id                                String      @id         @default(cuid())
+  userId                            String
+  refreshToken                      String      @unique
+  userAgent                         String?
+  ip                                String?
+  expiresAt                         DateTime
+  createdAt                         DateTime                @default(now())
+
+  user                              user        @relation(fields: [userId], references: [id])
+}
+
+
+model otp{
+  id                                String      @id         @default(cuid())
+  email                             String
+  code                              String
+  type                              String
+  expiresAt                         DateTime
+  verified                          Boolean                 @default(false)
+  attemps                           Int                     @default(0)
+  createdAt                         DateTime                @default(now())
 }

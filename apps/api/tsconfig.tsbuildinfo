@@ -1,1 +1,1 @@
-{"root":["./src/index.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/lib/cookie.ts","./src/lib/hash.ts","./src/lib/jwt.ts","./src/lib/oauth.ts","./src/lib/otp.ts","./src/modules/auth/auth.controller.ts","./src/modules/auth/auth.middleware.ts","./src/modules/auth/auth.routes.ts","./src/modules/auth/auth.services.ts","./src/modules/user/user.service.ts","./src/types/express.d.ts","./src/utils/email.ts"],"version":"5.9.2"}
