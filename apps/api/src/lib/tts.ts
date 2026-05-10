@@ -40,5 +40,5 @@ const cleanText = (text: string) => {
 export const extractTextFromImage = async (filePath: string) => {
     const preprocessed = preProcessImage(filePath);
 
-    const result = await 
+    // const result = await 
 }

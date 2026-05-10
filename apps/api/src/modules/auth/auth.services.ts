@@ -4,6 +4,7 @@ import { generateOtp } from "../../lib/otp.js";
 import { sendEmail } from "../../utils/email.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../lib/jwt.js";
 import { verifyGoogleToken } from "../../lib/oauth.js";
+import { otpVerifyTemplate } from "../../shared/templates/otp.template.js";
 
 
 
@@ -33,13 +34,14 @@ const createSession = async (userId: string) => {
 
 
 export const register = async (email: string, password: string) => {
-    const exists = await client.user.findUnique({
+    // this is working good
+    const user = await client.user.findUnique({
         where: {
             email 
         }
     });
 
-    if(exists) throw new Error("User already exists");
+    if(user) throw new Error("User already exists");
 
     const hash = await hashPassword(password);
 
@@ -52,22 +54,25 @@ export const register = async (email: string, password: string) => {
     });
 
     const code = generateOtp();
+    
 
     await client.otp.create({
         data: {
             email: email,
             code,
             type: "verify-email",
-            expiresAt: new Date(Date.now() + 5 * 60 * 60)
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000)
         }
     })
 
-    await sendEmail(email, "verify-email", `OTP: ${code}`)
+    await sendEmail({to: email, subject: "Verify email", html: otpVerifyTemplate(code)});
 }
 
 
 
 export const verifyEmail = async (email: string, code: string) => {
+    // it is working correctly
+
     const otp = await client.otp.findFirst({
         where: {
             email,
@@ -77,7 +82,31 @@ export const verifyEmail = async (email: string, code: string) => {
         }
     });
 
-    if (!otp || otp.expiresAt < new Date()) throw new Error("Invalid OTP");
+    if (!otp) throw new Error("Invalid OTP");
+
+
+
+    if(otp.expiresAt < new Date()){
+        // this means otp is now expired so we should send a new otp to the db and email.
+
+        const newCode = generateOtp();
+
+        await client.otp.update({
+            where: {
+                id: otp.id
+            },
+            data: {
+                code: newCode,
+                expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+            }
+        })
+
+
+        await sendEmail({to: email, subject: "Verify email", html: otpVerifyTemplate(otp.code)});
+        
+        throw new Error("OTP is expired. New OTP sent.")
+    }
+
 
     await client.otp.update({
         where: {
@@ -88,6 +117,7 @@ export const verifyEmail = async (email: string, code: string) => {
         }
     })
 
+
     await client.user.update({
         where: {
             email: email
@@ -96,6 +126,7 @@ export const verifyEmail = async (email: string, code: string) => {
             isVerified: true
         }
     })
+
 
 }
 
@@ -205,7 +236,7 @@ export const requestPasswordReset = async (email: string) => {
         }
     })
 
-    await sendEmail(email, "Reset Password", `OTP: ${code}`);
+    await sendEmail({to: email, subject: "Reset Password", html: `OTP: ${code}`});
 }
 
 
@@ -215,7 +246,10 @@ export const resetPassword = async(email: string, code: string, newPassword: str
         where: { email, code, type: "reset_password", verified: false },
     });
 
-    if (!otp || otp.expiresAt < new Date()) throw new Error("Invalid OTP");
+    if (!otp || otp.expiresAt < new Date()){
+        console.log("Invalid OTP");
+        return;
+    }
 
 
     await client.otp.update({
