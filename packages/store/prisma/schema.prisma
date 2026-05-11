@@ -19,7 +19,10 @@ model user {
   password                          String?
   provider                          String
   isVerified                        Boolean                 @default(false)
+
+  
   sessions                          session[]
+  poems                             poem[]
 }
 
 model session{
@@ -45,3 +48,23 @@ model otp{
   attemps                           Int                     @default(0)
   createdAt                         DateTime                @default(now())
 }
+
+
+
+model poem{
+  id                                String      @id         @default(uuid())
+  userId                            String
+  originalText                     String
+  formattedText                     String
+  emotion                           String
+
+
+  audioUrl                          String?
+  createdAt                         DateTime                @default(now())
+
+
+  user                              user        @relation(fields: [userId], references: [id])
+}
+
+
+
