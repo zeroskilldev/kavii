@@ -5,11 +5,12 @@ import Tesseract from "tesseract.js";
 import fs from "fs";
 
 
+
 const preProcessImage = async (imagePath: string) => {
 
     const outputPath = imagePath + "_processed.png";
 
-    await sharp(outputPath)
+    await sharp(imagePath)
             .grayscale()
             .normalize()
             .sharpen()
@@ -17,7 +18,7 @@ const preProcessImage = async (imagePath: string) => {
             .toFile(outputPath)
 
     return outputPath;
-        
+
 }
 
 
@@ -37,28 +38,40 @@ const cleanText = (text: string) => {
 
 
 export const extractTextFromImage = async (imagePath: string) => {
-    const processed = await preProcessImage(imagePath);
+    let processed : string | null = null; 
+    let worker: Tesseract.Worker | null = null;
 
     try {
-        const worker = await Tesseract.createWorker('hin');
+        processed = await preProcessImage(imagePath);
+
+        worker = await Tesseract.createWorker('hin');
+
+        worker.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO
+        })
 
         const {
         data: { text, confidence },
         } = await worker.recognize(processed);
 
-        await worker.terminate();
-
-        fs.unlinkSync(processed);
-
         return {
-        text: cleanText(text),
-        confidence,
-        language: "Hindi",
+            text: cleanText(text),
+            confidence,
+            language: "Hindi",
         };
 
     }
+
     catch(e) {
         throw new Error("OCR failed");
+    }
+    
+    finally{
+
+        if(worker) await worker.terminate();
+
+        if(processed) fs.unlink(processed, () => {})
+
     }
 };
 

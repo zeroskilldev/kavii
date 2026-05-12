@@ -1,8 +1,8 @@
 import { client } from "@repo/store/client"
-import { comparePassword, hashPassword, hashToken } from "../../lib/hash.js";
-import { generateOtp } from "../../lib/otp.js";
-import { sendEmail } from "../../utils/email.js";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../lib/jwt.js";
+import { comparePassword, hashPassword, hashToken } from "../../utils/hash.js";
+import { generateOtp } from "../../utils/otp.js";
+import { sendEmail } from "../../lib/email.js";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../utils/jwt.js";
 import { verifyGoogleToken } from "../../lib/oauth.js";
 import { otpVerifyTemplate } from "../../shared/templates/otp.template.js";
 

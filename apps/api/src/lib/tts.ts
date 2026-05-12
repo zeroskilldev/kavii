@@ -1,44 +1,25 @@
-// this file makes the poem human-like with pauses and emotions
-// converts text to speech
+import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+import { Readable } from "stream";
 
-import sharp from "sharp";
+const elevenLabs = new ElevenLabsClient({
+    apiKey: process.env.elvn_lab_api!
+})
 
-
-
-const preProcessImage = async (inputPath: string) => {
-    const outputPath = inputPath + "_processed.png";
-
-
-    // this thing helps in preprocessing the image greyscale makes the image b&w normalize increase the constrast sharpen makes the edges sharper and then saved to the output file.
-
-    await sharp(outputPath)
-        .greyscale()
-        .normalize()
-        .sharpen()
-        .threshold(150)
-        .toFile(outputPath)
-
-    return outputPath;
-
-}
+type Gender = "male" | "female"
 
 
-const cleanText = (text: string) => {
+export const tts = async (text: string, gender: Gender) => {
+    const voice_id = (gender == "male") ? "FmBhnvP58BK0vz65OOj7" : "XcWoPxj7pwnIgM3dQnWv";
 
+    const audio = await elevenLabs.textToSpeech.convert(
+        voice_id,
+        {
+            text,
+            modelId: 'eleven_multilingual_v2',
+            outputFormat: 'mp3_44100_128'
+        }
+    )
 
-    return text
-        .replace(/[|।]/g, ".")        // convert Hindi fullstop(|) → period(.) bcz ocr understands fullstop better. how can ocr be gawar bro you will need to understand hindi better.
-        .replace(/[_~]/g, "")      
-        .replace(/\s{2,}/g, " ")
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean)
-        .join("\n");
-}
+    return Readable.from(audio);
 
-
-export const extractTextFromImage = async (filePath: string) => {
-    const preprocessed = preProcessImage(filePath);
-
-    // const result = await 
 }
